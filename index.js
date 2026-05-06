@@ -2,6 +2,16 @@ require('dotenv').config();
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+
+// Simple HTTP server to satisfy hosting providers (Render, Railway, etc.)
+const port = process.env.PORT || 3000;
+http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Black Shadow, Inc. Ticket System is Operational\n');
+}).listen(port, () => {
+    console.log(`Web server listening on port ${port}`);
+});
 
 const client = new Client({
     intents: [
