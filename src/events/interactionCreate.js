@@ -64,7 +64,8 @@ module.exports = {
 
                     userTickets.set(interaction.user.id, channel.id);
 
-                    const logoPath = path.join('C:\\Users\\SHACHAF\\.gemini\\antigravity\\brain\\333e3d6d-6a0a-4320-add4-471728fb69bd\\media__1778042171902.png');
+                    // Relative path to assets
+                    const logoPath = path.join(__dirname, '..', 'assets', 'logo.png');
                     const logoAttachment = new AttachmentBuilder(logoPath, { name: 'logo.png' });
 
                     const embed = new EmbedBuilder()
@@ -127,7 +128,7 @@ module.exports = {
                         await interaction.followUp({ content: `📢 **Agent <@${interaction.user.id}>** has taken charge of this case.` });
                     } catch (error) {
                         console.error('Claim Error:', error);
-                        await interaction.followUp({ content: 'Error processing claim.', flags: ['Ephemeral'] }).catch(() => {});
+                        await interaction.followUp({ content: `❌ **Claim Error:** ${error.message}`, flags: ['Ephemeral'] }).catch(() => {});
                     }
                 } else if (customId === 'close_ticket') {
                     const row = new ActionRowBuilder()

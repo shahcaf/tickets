@@ -17,7 +17,8 @@ module.exports = {
 
         await interaction.deferReply({ flags: ['Ephemeral'] });
 
-        const logoPath = path.join('C:\\Users\\SHACHAF\\.gemini\\antigravity\\brain\\333e3d6d-6a0a-4320-add4-471728fb69bd\\media__1778042171902.png');
+        // Relative path to the assets directory
+        const logoPath = path.join(__dirname, '..', 'assets', 'logo.png');
         const logoAttachment = new AttachmentBuilder(logoPath, { name: 'logo.png' });
 
         const embed = new EmbedBuilder()
@@ -46,6 +47,6 @@ module.exports = {
         const row = new ActionRowBuilder().addComponents(selectMenu);
 
         await interaction.channel.send({ embeds: [embed], components: [row], files: [logoAttachment] });
-        await interaction.editReply({ content: 'Corporate Support Panel has been updated.' });
+        await interaction.editReply({ content: 'Corporate Support Panel has been successfully updated and deployed.' });
     },
 };

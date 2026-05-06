@@ -7,7 +7,8 @@ module.exports = {
         .setDescription('Displays information about the system architecture and developers'),
     
     async execute(interaction) {
-        const logoPath = path.join('C:\\Users\\SHACHAF\\.gemini\\antigravity\\brain\\333e3d6d-6a0a-4320-add4-471728fb69bd\\media__1778042171902.png');
+        // Relative path to the assets directory
+        const logoPath = path.join(__dirname, '..', 'assets', 'logo.png');
         const logoAttachment = new AttachmentBuilder(logoPath, { name: 'logo.png' });
 
         const embed = new EmbedBuilder()
