@@ -25,6 +25,7 @@ module.exports = {
                 const staffRoleId = process.env.STAFF_ROLE_ID;
                 const categoryId = process.env.TICKET_CATEGORY_ID;
 
+                // Defer as early as possible
                 await interaction.deferReply({ flags: ['Ephemeral'] }).catch(() => {});
 
                 if (cooldowns.has(interaction.user.id)) {
@@ -32,10 +33,6 @@ module.exports = {
                 }
                 cooldowns.add(interaction.user.id);
                 setTimeout(() => cooldowns.delete(interaction.user.id), 5000);
-
-                if (userTickets.has(interaction.user.id)) {
-                    return interaction.editReply({ content: 'You already have an open ticket.' });
-                }
 
                 const type = interaction.values[0];
                 const categories = {
@@ -45,15 +42,20 @@ module.exports = {
                 };
 
                 const config = categories[type] || categories.general;
-                const channelName = `${config.prefix}-${interaction.user.username}`;
-                const channelTopic = `🏢 BLACK SHADOW, INC. • ${config.label} Ticket • Authorized Representative: ${interaction.user.tag} (${interaction.user.id})`;
+                const channelName = `${config.prefix}-${interaction.user.username}`.toLowerCase();
+                
+                // Prevent double creation check
+                const existingChannel = interaction.guild.channels.cache.find(c => c.name === channelName && c.parentId === categoryId);
+                if (existingChannel || userTickets.has(interaction.user.id)) {
+                    return interaction.editReply({ content: 'You already have a channel for this inquiry or a ticket is currently open.' });
+                }
 
                 try {
                     const channel = await interaction.guild.channels.create({
                         name: channelName,
                         type: ChannelType.GuildText,
                         parent: categoryId,
-                        topic: channelTopic,
+                        topic: `🏢 BLACK SHADOW, INC. • ${config.label} Ticket • Authorized Representative: ${interaction.user.tag} (${interaction.user.id})`,
                         permissionOverwrites: [
                             { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
                             { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] },
@@ -130,18 +132,29 @@ module.exports = {
                         await interaction.followUp({ content: `❌ **Claim Error:** ${error.message}`, flags: ['Ephemeral'] }).catch(() => {});
                     }
                 } else if (customId === 'close_ticket') {
+                    // Try to reply, if already replied/deferred, use followUp
                     const row = new ActionRowBuilder()
                         .addComponents(
                             new ButtonBuilder().setCustomId('confirm_close').setLabel('Confirm Closure').setStyle(ButtonStyle.Danger),
                             new ButtonBuilder().setCustomId('cancel_close').setLabel('Abort').setStyle(ButtonStyle.Secondary)
                         );
                     
-                    await interaction.reply({ content: '### ⚠️ Termination Confirmation\nConfirm channel closure?', components: [row] }).catch(console.error);
+                    try {
+                        await interaction.reply({ content: '### ⚠️ Termination Confirmation\nConfirm channel closure?', components: [row], flags: ['Ephemeral'] });
+                    } catch (e) {
+                        await interaction.followUp({ content: '### ⚠️ Termination Confirmation\nConfirm channel closure?', components: [row], flags: ['Ephemeral'] }).catch(() => {});
+                    }
                 } else if (customId === 'cancel_close') {
-                    await interaction.message.delete().catch(() => {});
+                    await interaction.reply({ content: 'Termination aborted.', flags: ['Ephemeral'] }).catch(() => {});
+                    // Delete the confirmation message if possible
+                    if (interaction.message) await interaction.message.delete().catch(() => {});
                 } else if (customId === 'confirm_close') {
                     try {
-                        await interaction.update({ content: '🔄 **Terminating connection...** Archiving in 5s.', components: [] });
+                        // Use deferUpdate to acknowledge the click immediately
+                        await interaction.deferUpdate().catch(() => {});
+                        
+                        // Notify in channel
+                        await interaction.channel.send('🔄 **Terminating connection...** Archiving in 5s.').catch(() => {});
                         
                         const logChannelId = process.env.LOG_CHANNEL_ID;
                         if (logChannelId) {
@@ -160,6 +173,7 @@ module.exports = {
                             }
                         }
 
+                        // Cleanup userTickets map
                         for (const [userId, channelId] of userTickets.entries()) {
                             if (channelId === interaction.channel.id) {
                                 userTickets.delete(userId);
