@@ -39,9 +39,9 @@ module.exports = {
 
                 const type = interaction.values[0];
                 const categories = {
-                    general: { prefix: 'gen', label: 'General Info', msg: 'Please state your inquiry for General Info.' },
-                    report: { prefix: 'sec', label: 'Report User', msg: 'Please provide full documentation of the security breach or rule violation.' },
-                    partner: { prefix: 'hub', label: 'Partnership', msg: 'Submit your partnership proposal including all relevant links.' }
+                    general: { prefix: 'general', label: 'General Info', msg: 'Please state your inquiry for General Info.' },
+                    report: { prefix: 'report', label: 'Report User', msg: 'Please provide full documentation of the security breach or rule violation.' },
+                    partner: { prefix: 'partnership', label: 'Partnership', msg: 'Submit your partnership proposal including all relevant links.' }
                 };
 
                 const config = categories[type] || categories.general;
@@ -64,7 +64,6 @@ module.exports = {
 
                     userTickets.set(interaction.user.id, channel.id);
 
-                    // Relative path to assets
                     const logoPath = path.join(__dirname, '..', 'assets', 'logo.png');
                     const logoAttachment = new AttachmentBuilder(logoPath, { name: 'logo.png' });
 
